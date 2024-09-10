@@ -1,6 +1,8 @@
 use std::{
-    sync::{mpsc, Arc, Mutex}, // Import necessary modules from the standard library
-    thread,
+    io::{prelude::*, BufReader},
+    net::TcpStream,
+    sync::{mpsc, Arc, Mutex},
+    thread
 };
 
 // ThreadPool struct represents a pool of worker threads
@@ -114,4 +116,90 @@ impl Worker {
             thread: Some(thread),
         }
     }
+}
+
+
+use std::collections::HashMap;
+use std::io::{BufRead, Error, Lines, Result};
+
+/// Represents an HTTP request.
+pub struct Request {
+    /// The HTTP method of the request (e.g., "GET", "POST").
+    pub method: String,
+    /// The path of the request (e.g., "/index.html").
+    pub path: String,
+    /// The HTTP version of the request (e.g., "HTTP/1.1").
+    pub version: String,
+    /// The headers of the request.
+    pub headers: HashMap<String, String>,
+}
+
+impl Request {
+    /// Creates a new `Request` from a `TcpStream`.
+    ///
+    /// # Arguments
+    ///
+    /// * `stream` - The `TcpStream` to read the request from.
+    ///
+    /// # Returns
+    ///
+    /// A new `Request` object.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if there is a problem reading from the `TcpStream`
+    /// or parsing the request.
+    pub fn new(mut stream: TcpStream) -> Result<Request> {
+        let buf_reader = BufReader::new(&mut stream);
+        let mut lines: Lines<BufReader<&mut TcpStream>> = buf_reader.lines();
+
+        let request_line = lines.next().ok_or(Error::new(std::io::ErrorKind::InvalidData, "empty stream"))??;
+        let (method, path, version) = parse_request_line(&request_line)?;
+
+        let mut headers = HashMap::new();
+        for line in lines.take_while(|line| match line {
+            Ok(line) => !line.is_empty(),
+            Err(_) => false,
+        }) {
+            let line = line?;
+            let parts: Vec<&str> = line.split(": ").collect();
+            if parts.len() == 2 {
+                headers.insert(parts[0].to_string(), parts[1].to_string());
+            }
+        }
+
+        Ok(Request {
+            method,
+            path,
+            version,
+            headers
+        })
+    }
+}
+
+/// Parses the request line of an HTTP request.
+///
+/// # Arguments
+///
+/// * `request_line` - The request line to parse.
+///
+/// # Returns
+///
+/// A tuple containing the method, path, and version of the request.
+///
+/// # Errors
+///
+/// Returns an error if the request line is invalid.
+fn parse_request_line(request_line: &str) -> Result<(String, String, String)> {
+    let parts: Vec<&str> = request_line.split(' ').collect();
+    if parts.len() != 3 {
+        return Err(Error::new(
+            std::io::ErrorKind::InvalidData,
+            "invalid request line",
+        ));
+    }
+    let method = parts[0].to_string();
+    let path = parts[1].to_string();
+    let version = parts[2].to_string();
+    Ok((method, path, version))
 }

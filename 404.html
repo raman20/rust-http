@@ -4,10 +4,84 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>404 Not Found</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #121212;
+            color: #fff;
+            font-family: sans-serif;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .container {
+            text-align: center;
+        }
+
+        .error-code {
+            font-size: 100px;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+
+        .message {
+            font-size: 24px;
+            margin-bottom: 30px;
+        }
+
+        .rocket {
+            width: 100px;
+            height: 100px;
+            background-color: #fff;
+            border-radius: 50%;
+            position: relative;
+            animation: rocket 3s infinite;
+        }
+
+        .flame {
+            width: 0;
+            height: 0;
+            border-left: 20px solid transparent;
+            border-right: 20px solid transparent;
+            border-bottom: 40px solid #ff6347;
+            position: absolute;
+            bottom: -40px;
+            left: 40px;
+            animation: flame 1s infinite alternate;
+        }
+
+        @keyframes rocket {
+            0% {
+                transform: translateY(0);
+            }
+            50% {
+                transform: translateY(-20px);
+            }
+            100% {
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes flame {
+            0% {
+                opacity: 1;
+            }
+            100% {
+                opacity: 0.5;
+            }
+        }
+    </style>
 </head>
 <body>
-    <h1>404 Not Found</h1>
-    <p>The page you are looking for cannot be found.</p>
-    <a href="/">Go back to homepage</a>
+    <div class="container">
+        <div class="error-code">404</div>
+        <div class="message">Oops! Page not found.</div>
+        <div class="rocket">
+            <div class="flame"></div>
+        </div>
+    </div>
 </body>
 </html>
